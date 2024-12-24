@@ -1,5 +1,25 @@
 import mysql.connector
 import pandas as pd
+from datetime import date, timedelta
+import sys
+
+
+def get_n_days_before(n):
+    # Get today's date
+    today = date.today()
+    # Calculate the date n days before today
+    past_date = today - timedelta(days=n)
+    return past_date
+
+# Example usage
+if(len(sys.argv[1])>0):
+    n = int(sys.argv[1])  # Change this value to get different days before today
+else:
+    n = 1
+result = get_n_days_before(n)
+
+START_DATE = result
+END_DATE = date.today()
 
 # Step 1: Connect to MySQL database
 db_connection = mysql.connector.connect(
@@ -9,8 +29,6 @@ db_connection = mysql.connector.connect(
     database='unidocs'
 )
 
-START_DATE = '2024-05-13 15:32:18'
-END_DATE = '2024-06-13 15:32:18'
 TENANT_CODE = 'rarerabbit'
 
 def extract_between_hyphens(input_string):
@@ -40,8 +58,10 @@ def fetch_data_from_db():
         cursor.execute(query)
         data = cursor.fetchall()
 
+        print(f"Fetched {len(data)} entries")
+
         data_formatted = [ (extract_between_hyphens(col[0]), col[1], col[2], col[3]) for col in data ]
-        print(data_formatted)
+        # print(data_formatted)
         # Cleanup: close cursor and connection
         cursor.close()
         db_connection.close()
@@ -60,8 +80,7 @@ try:
     headers = ["PO Code", "UserName", "Date", "Document Link"]
     df = pd.DataFrame(data, columns=headers)
     df.to_csv('report.csv', index=False)
+    
 
 except Exception as e:
     print("Error: ", e)
-
-
